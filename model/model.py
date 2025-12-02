@@ -25,6 +25,7 @@ class Model:
         for t in all_connessioni:
             anno = t.anno
             if anno <= year:
+                #aggiungere verifica connessioni
                 self.G.add_edge(t.r1, t.r2)
 
                 # salva la stringa coi nomi, NON fare query
