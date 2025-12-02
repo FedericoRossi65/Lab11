@@ -1,10 +1,12 @@
 import networkx as nx
 from database.dao import DAO
+from model.rifugio import Rifugio
 
 
 class Model:
     def __init__(self):
         self.G = nx.Graph()
+        self._nodes = None
 
     def build_graph(self, year: int):
         """
@@ -13,14 +15,31 @@ class Model:
         Quindi il grafo avrà solo i nodi che appartengono almeno ad una connessione, non tutti quelli disponibili.
         :param year: anno limite fino al quale selezionare le connessioni da includere.
         """
-        # TODO
+        self.G.clear()
+        self._nodes = set()
+
+
+        all_connessioni = DAO.get_connesione()
+        rifugi = {r.id: r.nome for r in DAO.get_rifugio()}
+
+        for t in all_connessioni:
+            anno = t.anno
+            if anno <= year:
+                self.G.add_edge(t.r1, t.r2)
+
+                # salva la stringa coi nomi, NON fare query
+                nome_tratta = f"{rifugi[t.r1]} --> {rifugi[t.r2]}"
+
+
+        return self.G
+
 
     def get_nodes(self):
         """
         Restituisce la lista dei rifugi presenti nel grafo.
         :return: lista dei rifugi presenti nel grafo.
         """
-        # TODO
+
 
     def get_num_neighbors(self, node):
         """
