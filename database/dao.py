@@ -55,7 +55,7 @@ class DAO:
                             GREATEST(id_rifugio1,id_rifugio2) AS r2, 
                             anno
                     FROM connessione
-                    GROUP BY r1, r2"""
+                    """
 
         try:
             cursor.execute(query)

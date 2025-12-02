@@ -7,6 +7,9 @@ class Model:
     def __init__(self):
         self.G = nx.Graph()
         self._nodes = None
+        self._rifugi = {}
+        for r in DAO.get_rifugio():
+            self._rifugi[r.id] = r
 
     def build_graph(self, year: int):
         """
@@ -18,19 +21,23 @@ class Model:
         self.G.clear()
         self._nodes = set()
 
-
         all_connessioni = DAO.get_connesione()
-        rifugi = {r.id: r.nome for r in DAO.get_rifugio()}
 
         for t in all_connessioni:
-            anno = t.anno
-            if anno <= year:
-                #aggiungere verifica connessioni
-                self.G.add_edge(t.r1, t.r2)
+            if t.anno <= year:
+                r1 = t.r1
+                r2 = t.r2
 
-                # salva la stringa coi nomi, NON fare query
-                nome_tratta = f"{rifugi[t.r1]} --> {rifugi[t.r2]}"
 
+                self.G.add_node(r1, obj=self._rifugi[r1])
+                self.G.add_node(r2, obj=self._rifugi[r2])
+
+                self.G.add_edge(r1, r2)
+
+                self.G[r1][r2]["nome"] = f"{self._rifugi[r1].nome} --> {self._rifugi[r2].nome}"
+
+                self._nodes.add(r1)
+                self._nodes.add(r2)
 
         return self.G
 
@@ -40,6 +47,7 @@ class Model:
         Restituisce la lista dei rifugi presenti nel grafo.
         :return: lista dei rifugi presenti nel grafo.
         """
+        return [self._rifugi[rid] for rid in self._nodes]
 
 
     def get_num_neighbors(self, node):
@@ -48,14 +56,18 @@ class Model:
         :param node: un rifugio (cioè un nodo del grafo)
         :return: numero di vicini diretti del nodo indicato
         """
-        # TODO
-
+        r_raggiungibili = []
+        node = node.id
+        for r in nx.neighbors(self.G, node):
+            r_raggiungibili.append(r)
+        return len(r_raggiungibili)
     def get_num_connected_components(self):
         """
         Restituisce il numero di componenti connesse del grafo.
         :return: numero di componenti connesse
         """
-        # TODO
+        componenti_connese = list(nx.connected_components(self.G))
+        return len(componenti_connese)
 
     def get_reachable(self, start):
         """
@@ -72,6 +84,28 @@ class Model:
         b = self.get_reachable_recursive(start)
 
         return a
-        """
 
-        # TODO
+        """
+        start = start.id
+        # BFS
+        bfs_tree = nx.bfs_tree(self.G, start)
+        nodi_bfs = []
+        for nodo in bfs_tree.nodes():
+            if nodo != start:
+                nodi_bfs.append(nodo)
+
+
+
+
+        # DFS
+        dfs_tree = nx.dfs_tree(self.G, start)
+        nodi_dfs = []
+        for nodo in dfs_tree.nodes():
+            if nodo != start:
+                nodi_dfs.append(nodo)
+        lista_rifugi = []
+        for nodo_id in nodi_bfs:
+            rifugio = self._rifugi[nodo_id]
+            lista_rifugi.append(rifugio)
+        return lista_rifugi
+
